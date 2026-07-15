@@ -106,11 +106,11 @@ cd packages/jexxxus-api && npm run build && npm start
 
 ```mermaid
 graph LR
-    CLI[jexxxus auth login] --> Token[jexxxus auth token -q]
-    Token --> API[JEXXXUS | API]
-    API --> Clerk[Clerk JWT verify]
-    Clerk --> RLS[Supabase anon + user JWT]
-    RLS --> Vault[BLXCKBOOK + NXT + TV]
+    CLI["jexxxus auth login"] --> Token["jexxxus auth token -q"]
+    Token --> API["JEXXXUS | API"]
+    API --> Clerk["Clerk JWT verify"]
+    Clerk --> RLS["Supabase anon + user JWT"]
+    RLS --> Vault["BLXCKBOOK + NXT + TV"]
 ```
 
 Account logic is vendored from `jexxx.us-cli/dist` at build time (`scripts/vendor-jexxxus-cli.sh`).
