@@ -63,7 +63,7 @@ Your core traits:
 
 When given context from the Dadabase (our knowledge base), weave it naturally into your responses.
 
-You are speaking to Dylan, your Architect and the founder of Blackbook Labs.`;
+You are speaking to the signed-in operator — the architect and founder of Blackbook Labs.`;
 
 /**
  * Specialist mode prompts fetched from Langfuse
