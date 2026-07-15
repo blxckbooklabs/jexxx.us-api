@@ -8,18 +8,28 @@
 | Remote | `git@github.com:blxckbooklabs/jexxx.us-api.git` |
 | History | Clean — migrated from legacy repo via `export-oss-clean.sh` (no `.env` / `node_modules` in history) |
 
-## Verify after push
+## First run after clean clone (required — fixes 502)
+
+`node_modules` is not in git. Install before LaunchAgent:
+
+```bash
+bash scripts/bootstrap-mac-api.sh
+```
+
+Or manually:
+
+```bash
+pnpm install --no-frozen-lockfile
+cd packages/jexxxus-api && npm run build
+bash ../jexxx.us-infrastructure/jexxxus-api/install-api-launchd.sh
+```
+
+## Verify
 
 ```bash
 bash scripts/oss-preflight.sh
-cd packages/jexxxus-api && pnpm install && npm run build
-curl http://127.0.0.1:8787/health   # after LaunchAgent restart
-```
-
-## Mac API (unchanged path)
-
-```bash
-bash jexxx.us-infrastructure/jexxxus-api/install-api-launchd.sh
+curl http://127.0.0.1:8787/health
+curl https://api.jexxx.us/health
 ```
 
 LaunchAgent already targets `jexxx.us-api/packages/jexxxus-api/dist/index.js`.
