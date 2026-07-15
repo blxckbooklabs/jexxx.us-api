@@ -1,0 +1,10 @@
+---
+canon: Nag-Hammadi
+source_type: Gnostic-Codex
+translation: Lambdin
+id: G-THOMAS-24
+saying: 24
+---
+
+His disciples said to him, "Show us the place where you are, since it is necessary for us to seek it."
+He said to them, "Whoever has ears, let him hear. There is light within a man of light, and he lights up the whole world. If he does not shine, he is darkness."

@@ -1,0 +1,10 @@
+---
+canon: Nag-Hammadi
+source_type: Gnostic-Codex
+translation: Lambdin
+id: G-THOMAS-79
+saying: 79
+---
+
+A woman from the crowd said to him, "Blessed are the womb which bore you and the breasts which nourished you."
+He said to her, "Blessed are those who have heard the word of the father and have truly kept it. For there will be days when you will say, 'Blessed are the womb which has not conceived and the breasts which have not given milk.'"

@@ -1,0 +1,9 @@
+---
+canon: Nag-Hammadi
+source_type: Gnostic-Codex
+translation: Lambdin
+id: G-THOMAS-77
+saying: 77
+---
+
+Jesus said, "It is I who am the light which is above them all. It is I who am the all. From me did the all come forth, and unto me did the all extend. Split a piece of wood, and I am there. Lift up the stone, and you will find me there."

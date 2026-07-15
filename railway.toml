@@ -1,0 +1,7 @@
+[project]
+id = "f7d8fd2b-a63f-4498-be9b-3723682f18d7"
+name = "JEXXXUS | API"
+
+[railway]
+origin = "github"
+serviceId = ""

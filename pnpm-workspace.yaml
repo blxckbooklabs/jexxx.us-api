@@ -1,0 +1,11 @@
+packages:
+  - 'packages/*'
+  - '!packages/*/test'
+  - '!packages/*/dist'
+allowBuilds:
+  '@clerk/shared': set this to true or false
+  cwebp-bin: set this to true or false
+  esbuild: set this to true or false
+  mozjpeg: set this to true or false
+  pngquant-bin: set this to true or false
+  sharp: set this to true or false

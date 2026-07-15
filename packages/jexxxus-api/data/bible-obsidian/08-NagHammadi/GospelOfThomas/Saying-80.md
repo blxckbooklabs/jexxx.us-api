@@ -1,0 +1,9 @@
+---
+canon: Nag-Hammadi
+source_type: Gnostic-Codex
+translation: Lambdin
+id: G-THOMAS-80
+saying: 80
+---
+
+Jesus said, "He who has recognized the world has found the body, but he who has found the body is superior to the world."

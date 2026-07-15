@@ -1,0 +1,41 @@
+---
+canon: Ethiopian-81
+source_type: Scripture
+id: Didascalica-16
+chapter: 16
+translation: Harden (1920)
+---
+
+. 
+
+
+THAT THE LAYMAN OUGHT NOT TO EXECUTE THE OFFICE 
+OF THE PRIESTHOOD. 
+
+
+[iii., 10.] We command you,! then, that no layman 
+execute the office of the priesthood, . (that he) neither 
+offer incense, nor baptize, nor lay on hands, nor bless,® 
+nor give the bread of the blessing. For there is none 
+that can receive this grace, unless it be given him of 
+God. But they must needs receive this grace and 
+honour from the bishop. And he to whom the dignity 
+of the priesthood hath not been given shall find con- 
+demnation, if he transgress, like Uzziah the King. 
+
+{iii., 11.) Moreover we do not command that all 
+that are in the Church should baptize—(that is) neither 
+the readers, nor the singers, nor the doorkeepers but 
+only the bishops and the presbyters, and let. the 
+deacons $ minister together with them. And they who 
+transgress and do thus shall find the condemnation 
+which befell the sons of Korah. Behold we command 
+that presbyters ordain not deacons, nor deaconesses, 
+nor readers, nor singers, nor doorkeepers; but let 
+bishops only ordain according to the order of the 
+Church—and such in whom is no revenge, nor envy, 
+nor slander, nor hatred, nor malice. 
+
+{iii., 12.) Behold we have told you before that they 
+that do thus are aliens 5 from the society ® of Christians : 
+and above all widows.

@@ -1,0 +1,9 @@
+---
+canon: Nag-Hammadi
+source_type: Gnostic-Codex
+translation: Lambdin
+id: G-THOMAS-50
+saying: 50
+---
+
+Jesus said, "If they say to you, 'Where did you come from?', say to them, 'We came from the light, the place where the light came into being on its own accord and established itself and became manifest through their image.' If they say to you, 'Is it you?', say, 'We are its children, we are the elect of the living father.' If they ask you, 'What is the sign of your father in you?', say to them, 'It is movement and repose.'"

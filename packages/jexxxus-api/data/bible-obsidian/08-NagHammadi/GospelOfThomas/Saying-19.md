@@ -1,0 +1,9 @@
+---
+canon: Nag-Hammadi
+source_type: Gnostic-Codex
+translation: Lambdin
+id: G-THOMAS-19
+saying: 19
+---
+
+Jesus said, "Blessed is he who came into being before he came into being. If you become my disciples and listen to my words, these stones will minister to you. For there are five trees for you in Paradise which remain undisturbed summer and winter and whose leaves do not fall. Whoever becomes acquainted with them will not experience death."

@@ -1,0 +1,9 @@
+---
+canon: Nag-Hammadi
+source_type: Gnostic-Codex
+translation: Lambdin
+id: G-THOMAS-46
+saying: 46
+---
+
+Jesus said, "Among those born of women, from Adam until John the Baptist, there is no one so superior to John the Baptist that his eyes should not be lowered (before him). Yet I have said, whichever one of you comes to be a child will be acquainted with the kingdom and will become superior to John."

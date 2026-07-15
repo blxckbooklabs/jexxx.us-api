@@ -1,0 +1,9 @@
+---
+canon: Nag-Hammadi
+source_type: Gnostic-Codex
+translation: Lambdin
+id: G-THOMAS-107
+saying: 107
+---
+
+Jesus said, "The kingdom is like a shepherd who had a hundred sheep. One of them, the largest, went astray. He left the ninety-nine sheep and looked for that one until he found it. When he had gone to such trouble, he said to the sheep, 'I care for you more than the ninety-nine.'"

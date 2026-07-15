@@ -1,0 +1,9 @@
+---
+canon: Nag-Hammadi
+source_type: Gnostic-Codex
+translation: Lambdin
+id: G-THOMAS-57
+saying: 57
+---
+
+Jesus said, "The kingdom of the father is like a man who had good seed. His enemy came by night and sowed weeds among the good seed. The man did not allow them to pull up the weeds; he said to them, 'I am afraid that you will go intending to pull up the weeds and pull up the wheat along with them.' For on the day of the harvest the weeds will be plainly visible, and they will be pulled up and burned."

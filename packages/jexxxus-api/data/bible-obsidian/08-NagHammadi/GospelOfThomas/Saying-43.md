@@ -1,0 +1,10 @@
+---
+canon: Nag-Hammadi
+source_type: Gnostic-Codex
+translation: Lambdin
+id: G-THOMAS-43
+saying: 43
+---
+
+His disciples said to him, "Who are you, that you should say these things to us?"
+<Jesus said to them,> "You do not realize who I am from what I say to you, but you have become like the Jews, for they (either) love the tree and hate its fruit (or) love the fruit and hate the tree."

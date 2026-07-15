@@ -1,0 +1,9 @@
+---
+canon: Ethiopian-81
+source_type: Scripture
+id: HORNER-40-105
+statute: 40
+verse: 105
+---
+
+178  STATUTES  OF  THE  APOSTLES

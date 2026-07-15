@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment (never commit — use .env.example)
+.env
+.env.*
+!.env.example
+
+# Build output (dist is vendored for jexxxus-api deploy; ignore other packages)
+packages/*/dist/
+!packages/jexxxus-api/dist/
+!packages/jexxxus-api/vendor/
+
+# Logs & OS
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE / tooling
+.idea/
+.vscode/
+*.tsbuildinfo
+.vercel
+.turbo
+coverage/
+
+# Local secrets & credentials
+credentials.json
+*.pem
+*.key

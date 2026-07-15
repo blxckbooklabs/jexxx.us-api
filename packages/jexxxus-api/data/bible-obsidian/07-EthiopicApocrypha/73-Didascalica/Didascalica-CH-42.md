@@ -1,0 +1,21 @@
+---
+canon: Ethiopian-81
+source_type: Scripture
+id: Didascalica-42
+chapter: 42
+translation: Harden (1920)
+---
+
+. 
+
+
+THE catechumens * who have been ba tized shall 
+
+this prayer: O God Almighty, the Father of our Lord 
+and Saviour Jesus Christ, the only-begotten Son, that 
+lovest a body undefiled, and acceptest a meek heart and 
+a humble spirit, and a knowledge of wisdom that hath 
+no decay, make Thy Holy Spirit to dwell in us by Thy 
+good will and the strength of Thy power through Jesus 
+Christ, by whom to Thee be glory and power with Him 
+and with the Holy Spirit for ever and ever. Amen.

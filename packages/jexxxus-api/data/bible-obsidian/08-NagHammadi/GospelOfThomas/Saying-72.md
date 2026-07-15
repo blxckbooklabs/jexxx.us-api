@@ -1,0 +1,11 @@
+---
+canon: Nag-Hammadi
+source_type: Gnostic-Codex
+translation: Lambdin
+id: G-THOMAS-72
+saying: 72
+---
+
+A man said to him, "Tell my brothers to divide my father's possessions with me."
+He said to him, "O man, who has made me a divider?"
+He turned to his disciples and said to them, "I am not a divider, am I?"
