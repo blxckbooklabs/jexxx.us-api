@@ -57,7 +57,7 @@ export async function getToolsSchemaPayload() {
       writes: "Pass confirm: true for destructive tools (add_contact, delete_contact, etc.)",
     },
     description:
-      "Authenticated proxy to the BLXCKCHAT / CLI tool registry — Bible, TV, VEIL, Law, Docs, " +
+      "Authenticated proxy to the BLXCKCHAT / CLI tool registry — Bible, TV, VEIL, Music, Law, Docs, " +
       "vault reads, and vault writes with the same Clerk + RLS session as BLXCKCHAT.",
     endpoints: {
       "GET /api/v1/tools/schema": "This machine-readable tool catalog (public, no auth)",
