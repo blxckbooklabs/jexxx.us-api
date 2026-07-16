@@ -53,7 +53,7 @@ export function getAccountSchemaPayload() {
             "GET /api/v1/account/summary": "Vault counts and recent activity snapshot (auth required)",
             "GET /api/v1/account/export?target=all|blxckbook|nxt": "Full live JSON export (auth required)",
             "POST /api/v1/account/query": "Flexible account_query actions (auth required)",
-            "POST /api/v1/tools/execute": "Execute bible_query, tv_query, veil_query, law_query, docs_query, vault tools (auth required)",
+            "POST /api/v1/tools/execute": "Execute bible_query, tv_query, veil_query, music_query, law_query, docs_query, vault tools (auth required)",
         },
         actions: ACTIONS,
         sources: ["blxckbook", "nxt", "tv"],

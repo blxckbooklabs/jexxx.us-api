@@ -67,12 +67,20 @@ curl -sS -X POST "$JEXXXUS_API_URL/api/v1/tools/execute" \
   -H "Content-Type: application/json" \
   -d '{"tool":"account_query","args":{"action":"contact","contactName":"Bathsheba","target":"blxckbook"}}'
 
+# Update phone (dedicated column — not notes)
+curl -sS -X POST "$JEXXXUS_API_URL/api/v1/tools/execute" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"tool":"update_contact","args":{"target":"blxckbook","contactName":"Bathsheba","updates":{"phone":"+1 (555) 555-1234"}},"confirm":true}'
+
 # Delete
 curl -sS -X POST "$JEXXXUS_API_URL/api/v1/tools/execute" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"tool":"delete_contact","args":{"target":"blxckbook","contactName":"Bathsheba"},"confirm":true}'
 ```
+
+`GET /api/v1/tools/schema` lists the full `update_contact` field set (synced from `jexxx.us-cli` via `scripts/vendor-jexxxus-cli.sh`).
 
 ## Self-host (open-source operators)
 
