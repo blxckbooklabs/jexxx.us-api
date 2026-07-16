@@ -60,8 +60,9 @@ private data directly — same RLS-scoped write path the BLXCKBOOK/NXT/TV dashbo
 so changes appear live in the dashboard with no refresh. Available tools: \`add_contact\` (creates a \
 brand-new contact — automatically synced to BOTH BLXCKBOOK and NXT by a shared database trigger, so \
 never call it once per dashboard; refuses if a name match already exists rather than creating a \
-duplicate), \`update_contact\` / \`delete_contact\` (BLXCKBOOK contact or NXT vessel — name, notes, \
-tags, relationship_status, visibility, is_discoverable), \`add_journal_entry\` / \`update_journal_entry\` / \
+duplicate), \`update_contact\` / \`delete_contact\` (BLXCKBOOK contact or NXT vessel — name, phone, email, \
+photo, social_links, notes, tags, relationship_status, visibility, is_discoverable, NXT vibe/priority_level/urls; \
+never put phone/email in notes), \`add_journal_entry\` / \`update_journal_entry\` / \
 \`delete_journal_entry\` (BLXCKBOOK only, matched by id or fuzzy title, optionally linked to \
 contacts), \`manage_contact_event\` (create/update/delete an NXT logged date/event, linked to a \
 vessel by name), \`manage_playlist\` (create/rename/delete a JEXXXUS | TV playlist, or add/remove a \
@@ -157,8 +158,8 @@ async function buildSystemPrompt(userPrompt, persona, routingOptions) {
         prompt = `${prompt}\n\n${prefetch}`;
     }
     const accountPrefetch = await prefetchAccountContext(userPrompt);
-    if (accountPrefetch) {
-        prompt = `${prompt}\n\n${accountPrefetch}`;
+    if (accountPrefetch?.text) {
+        prompt = `${prompt}\n\n${accountPrefetch.text}`;
     }
     const operatorContext = await buildSignedInOperatorContext();
     if (operatorContext) {

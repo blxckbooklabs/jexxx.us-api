@@ -2,18 +2,53 @@ import * as fs from "fs";
 import { resolveAuthenticatedAccountSession } from "../../account-data/session.js";
 import { addContact, updateContact, deleteContact, addJournalEntry, updateJournalEntry, deleteJournalEntry, addContactEvent, updateContactEvent, deleteContactEvent, managePlaylist, syncBlxckbookExport, } from "../../account-data/mutations.js";
 import { exportVaultToDisk } from "../../account-data/export-to-disk.js";
+import { CONTACT_UPDATABLE_FIELD_LIST, CONTACT_UPDATE_PROPERTIES, } from "./contact-update-schema.js";
+function resolveContactUpdates(args) {
+    const updates = typeof args.updates === "object" && args.updates !== null
+        ? { ...args.updates }
+        : {};
+    for (const key of Object.keys(CONTACT_UPDATE_PROPERTIES)) {
+        if (args[key] !== undefined && updates[key] === undefined) {
+            updates[key] = args[key];
+        }
+    }
+    if (typeof args.phoneNumber === "string" && updates.phone === undefined) {
+        updates.phone = args.phoneNumber;
+    }
+    return updates;
+}
+/** Accept common model aliases (contactName, displayName, etc.) for add_contact. */
+export function resolveAddContactName(args) {
+    for (const key of ["name", "contactName", "displayName", "fullName", "contact_name"]) {
+        const value = args[key];
+        if (typeof value === "string" && value.trim())
+            return value.trim();
+    }
+    return "";
+}
 export const addContactTool = {
     name: "add_contact",
     description: "Create a brand-new contact. Automatically synced to both BLXCKBOOK and NXT — a single " +
         "Postgres trigger mirrors the row into both, so this never needs a separate call per " +
         "dashboard. Refuses (with a suggestion to use update_contact instead) if a contact matching " +
-        "that name already exists, to avoid creating a duplicate. Requires /auth login.",
+        "that name already exists, to avoid creating a duplicate. Requires /auth login. " +
+        "IMPORTANT: always pass the contact name in tool arguments as JSON, e.g. {\"name\": \"Ruth\"}.",
     parameters: {
         type: "object",
         properties: {
-            name: { type: "string", description: "Contact's name" },
+            name: {
+                type: "string",
+                description: "Contact display name (required). Example: Ruth",
+            },
+            contactName: {
+                type: "string",
+                description: "Alias for name — prefer the name field when possible",
+            },
             notes: { type: "string", description: "Optional notes" },
             tags: { type: "array", items: { type: "string" }, description: "Optional tags" },
+            phone: { type: "string", description: "Optional phone — dedicated column" },
+            email: { type: "string", description: "Optional email — dedicated column" },
+            photo: { type: "string", description: "Optional photo URL" },
             relationshipStatus: { type: "string", description: "Optional relationship status" },
             visibility: {
                 type: "string",
@@ -21,13 +56,15 @@ export const addContactTool = {
                 description: "Optional visibility (default: private)",
             },
         },
-        required: ["name"],
+        required: [],
     },
     requiresConfirmation: true,
     async execute(args) {
-        const name = String(args.name ?? "").trim();
-        if (!name)
-            return "Error: name is required.";
+        const name = resolveAddContactName(args);
+        if (!name) {
+            return ("Error: add_contact requires a contact name in tool arguments. " +
+                'Call add_contact again with JSON args like {"name": "Ruth"}.');
+        }
         const resolved = await resolveAuthenticatedAccountSession();
         if (!resolved.ok)
             return `Error: ${resolved.message}`;
@@ -40,6 +77,12 @@ export const addContactTool = {
             options.relationshipStatus = args.relationshipStatus;
         if (typeof args.visibility === "string")
             options.visibility = args.visibility;
+        if (typeof args.phone === "string")
+            options.phone = args.phone.trim();
+        if (typeof args.email === "string")
+            options.email = args.email.trim();
+        if (typeof args.photo === "string")
+            options.photo = args.photo.trim();
         const result = await addContact(resolved.session, name, options);
         return result.message;
     },
@@ -50,7 +93,10 @@ export const updateContactTool = {
         "to production data — the update is scoped to the signed-in user's own row via RLS and " +
         "shows up live in their dashboard (no refresh needed). Never asUserId — this tool only ever " +
         "writes the signed-in user's own data, regardless of super-admin status. Allowed fields: " +
-        "name, notes, tags, relationship_status, visibility, is_discoverable. Requires /auth login.",
+        `${CONTACT_UPDATABLE_FIELD_LIST}. ` +
+        "Phone and email have dedicated columns — NEVER put them in notes. " +
+        'Example phone update: {"target":"blxckbook","contactName":"Ruth Test","updates":{"phone":"+1 (555) 555-1234"}}. ' +
+        "Requires /auth login.",
     parameters: {
         type: "object",
         properties: {
@@ -62,10 +108,17 @@ export const updateContactTool = {
             contactName: { type: "string", description: "Name to fuzzy-match against existing contacts" },
             updates: {
                 type: "object",
-                description: "Fields to change, e.g. { \"relationship_status\": \"Dating\", \"notes\": \"...\" }",
+                description: "Fields to change on the matched contact/vessel row",
+                properties: CONTACT_UPDATE_PROPERTIES,
+            },
+            // Top-level field aliases — models often omit the updates wrapper.
+            ...CONTACT_UPDATE_PROPERTIES,
+            phoneNumber: {
+                type: "string",
+                description: "Alias for phone — prefer updates.phone when possible",
             },
         },
-        required: ["target", "contactName", "updates"],
+        required: ["target", "contactName"],
     },
     requiresConfirmation: true,
     async execute(args) {
@@ -76,9 +129,11 @@ export const updateContactTool = {
         const contactName = String(args.contactName ?? "").trim();
         if (!contactName)
             return "Error: contactName is required.";
-        const updates = typeof args.updates === "object" && args.updates !== null
-            ? args.updates
-            : {};
+        const updates = resolveContactUpdates(args);
+        if (Object.keys(updates).length === 0) {
+            return ("Error: update_contact requires at least one field in updates " +
+                '(e.g. {"updates":{"phone":"+1 (555) 555-1234"}}). Phone and email use dedicated columns — never notes.');
+        }
         const resolved = await resolveAuthenticatedAccountSession();
         if (!resolved.ok)
             return `Error: ${resolved.message}`;

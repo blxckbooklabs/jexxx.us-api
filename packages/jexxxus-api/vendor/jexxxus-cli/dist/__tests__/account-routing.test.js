@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { formatAccountRoutingHint, isVaultPrimaryPrompt, planAccountTools, } from "../lib/blxckchat/account-routing.js";
+import { formatAccountRoutingHint, isVaultPrimaryPrompt, isVaultReadOnlyPrompt, isVaultWritePrompt, planAccountTools, } from "../lib/blxckchat/account-routing.js";
 test("list my contacts routes to account_query contacts", () => {
     const plan = planAccountTools("list my contacts");
     assert.ok(plan.tools.includes("account_query"));
@@ -62,5 +62,38 @@ test("formatAccountRoutingHint includes account_query and no-fabrication rule", 
     assert.ok(hint);
     assert.match(hint, /account_query/);
     assert.match(hint, /never invent/i);
+});
+test("BLXCKBOOK contacts capability question routes to account_query contacts", () => {
+    const prompt = "Do you have the ability to tell me who my contacts are in BLXCKBOOK?";
+    const plan = planAccountTools(prompt);
+    assert.ok(plan.tools.includes("account_query"));
+    assert.equal(plan.action, "contacts");
+    assert.equal(plan.target, "blxckbook");
+    assert.equal(isVaultPrimaryPrompt(prompt), true);
+});
+test("who my contacts are in BLXCKBOOK routes to contacts action", () => {
+    const plan = planAccountTools("who my contacts are in BLXCKBOOK");
+    assert.equal(plan.action, "contacts");
+    assert.equal(plan.target, "blxckbook");
+});
+test("BLXCKBOOK contacts capability is vault read-only", () => {
+    const prompt = "Do you have the ability to tell me who my contacts are in BLXCKBOOK?";
+    assert.equal(isVaultReadOnlyPrompt(prompt), true);
+});
+test("add contact to BLXCKBOOK is not vault read-only", () => {
+    assert.equal(isVaultReadOnlyPrompt("add a new contact to my BLXCKBOOK named Alex"), false);
+});
+test("contact named Ruth captures contactName and enables write tools", () => {
+    const prompt = "Let's try with a contact named Ruth.";
+    const plan = planAccountTools(prompt);
+    assert.equal(plan.contactName, "Ruth");
+    assert.equal(isVaultReadOnlyPrompt(prompt), false);
+});
+test("CRUD capability question enables write tools", () => {
+    const prompt = "Do you have CRUD access, such as the ability to create a new test contact?";
+    assert.equal(isVaultReadOnlyPrompt(prompt), false);
+});
+test("create contact named Ruth is a vault write prompt", () => {
+    assert.equal(isVaultWritePrompt("Create a test contact named Ruth."), true);
 });
 //# sourceMappingURL=account-routing.test.js.map
