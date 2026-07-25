@@ -33,7 +33,8 @@ const VOICES = [
 const ALLOWED_VOICE_IDS = new Set(VOICES.map((v) => v.id));
 const requestSchema = z.object({
     text: z.string().min(1).max(MAX_TEXT),
-    voice: z.string().min(3).max(80).default(DEFAULT_VOICE),
+    /** Accept legacy Kokoro ids (`af`) and full Edge names. */
+    voice: z.string().min(1).max(80).default(DEFAULT_VOICE),
     /** Playback multiplier — 0.5 slow … 2.0 fast (maps to Edge prosody rate %). */
     speed: z.number().min(0.5).max(2).default(1),
 });
