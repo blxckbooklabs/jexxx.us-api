@@ -21,6 +21,7 @@ import {
   loadCorsOrigins,
   observabilityRoutesEnabled,
   publicAiRoutesEnabled,
+  publicTtsRoutesEnabled,
   validateVaultStartup,
 } from "./lib/server-config.js";
 
@@ -77,11 +78,23 @@ const loadServer = async () => {
   // Public read-only Bible surface (no provider cost).
   server.register(bibleRoutes, { prefix: "/api/v1/bible" });
 
+  // Public Edge TTS (Hermes-parity neural voice) — free, no provider key.
+  // Mounted independently of chat/AI so vault surface still serves bible.jexxx.us.
+  if (publicTtsRoutesEnabled()) {
+    await server.register(async (ttsApp: any) => {
+      const ttsLimits = getRateLimitConfig().tts;
+      await ttsApp.register(fastifyRateLimit, {
+        max: ttsLimits.max,
+        timeWindow: ttsLimits.timeWindow,
+      });
+      await ttsApp.register(ttsRoutes, { prefix: "/api/v1/tts" });
+    });
+  }
+
   if (publicAiRoutesEnabled()) {
     server.register(chatRoutes, { prefix: "/api/v1/chat" });
     server.register(solomonRoutes, { prefix: "/api/v1/solomon" });
     server.register(modelsRoutes, { prefix: "/api/v1/models" });
-    server.register(ttsRoutes, { prefix: "/api/v1/tts" });
   }
 
   if (legacyRoutesEnabled()) {

@@ -42,4 +42,18 @@ Owned by JEXXXUS, LLC platform / infrastructure.
 | Config | `packages/jexxxus-api/src/lib/server-config.ts` |
 | Account | `packages/jexxxus-api/src/routes/v1/account.ts` |
 | Tools | `packages/jexxxus-api/src/routes/v1/tools.ts` |
+| Bible | `packages/jexxxus-api/src/routes/v1/bible.ts` |
+| TTS (Edge) | `packages/jexxxus-api/src/routes/v1/tts.ts` |
 | Session | `packages/jexxxus-api/src/lib/account-session.ts` |
+
+### Public Edge TTS (bible.jexxx.us)
+
+- Backend: `msedge-tts` → Microsoft Edge Read Aloud (same voice family as Hermes `tts.provider: edge`)
+- Default voice: `en-US-AriaNeural`
+- Routes (always mountable on vault via `JEXXXUS_ENABLE_PUBLIC_TTS_ROUTES`, default **on**):
+  - `GET /api/v1/tts/health`
+  - `GET /api/v1/tts/voices`
+  - `POST /api/v1/tts` `{ text, voice?, speed? }` → `audio/mpeg`
+- Disk cache: `JEXXXUS_TTS_CACHE_DIR` (default OS tmp `jexxxus-tts-cache`)
+- Rate limit: `JEXXXUS_TTS_RATE_LIMIT_MAX` (default 40/min/IP)
+- Independent of `JEXXXUS_ENABLE_PUBLIC_AI_ROUTES` (no HF/LLM cost)

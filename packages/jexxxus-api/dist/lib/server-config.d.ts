@@ -17,6 +17,11 @@ export declare function getRateLimitConfig(): {
         max: number;
         timeWindow: number;
     };
+    /** Public Edge TTS — stricter than global to limit scrape/abuse. */
+    tts: {
+        max: number;
+        timeWindow: number;
+    };
 };
 export type VaultConfigStatus = {
     clerk: boolean;
@@ -34,4 +39,10 @@ export declare function validateVaultStartup(): {
 export declare function legacyRoutesEnabled(): boolean;
 /** Public AI routes can incur provider cost — disable on self-hosted OSS unless intended. */
 export declare function publicAiRoutesEnabled(): boolean;
+/**
+ * Public Edge TTS (Microsoft neural via edge-tts / msedge-tts).
+ * No API key / no HF bill — safe on vault surface for bible.jexxx.us.
+ * Default ON. Set JEXXXUS_ENABLE_PUBLIC_TTS_ROUTES=false to disable.
+ */
+export declare function publicTtsRoutesEnabled(): boolean;
 export declare function observabilityRoutesEnabled(): boolean;

@@ -43,6 +43,9 @@ export function loadCorsOrigins(): string[] {
     "http://localhost:3001",
     "http://localhost:5173",
     "https://jexxx.us",
+    "https://bible.jexxx.us",
+    "https://api.jexxx.us",
+    "https://api-vm.jexxx.us",
     "https://blxckchat.jexxx.us",
     "https://blxckbook.jexxx.us",
     "https://dxsh.blxckbook.jexxx.us",
@@ -68,6 +71,7 @@ export function getRateLimitConfig() {
   const max = Number.parseInt(process.env.JEXXXUS_RATE_LIMIT_MAX ?? "120", 10);
   const windowMs = Number.parseInt(process.env.JEXXXUS_RATE_LIMIT_WINDOW_MS ?? "60000", 10);
   const toolMax = Number.parseInt(process.env.JEXXXUS_TOOL_RATE_LIMIT_MAX ?? "30", 10);
+  const ttsMax = Number.parseInt(process.env.JEXXXUS_TTS_RATE_LIMIT_MAX ?? "40", 10);
   return {
     global: {
       max: Number.isFinite(max) && max > 0 ? max : 120,
@@ -75,6 +79,11 @@ export function getRateLimitConfig() {
     },
     toolsExecute: {
       max: Number.isFinite(toolMax) && toolMax > 0 ? toolMax : 30,
+      timeWindow: 60_000,
+    },
+    /** Public Edge TTS — stricter than global to limit scrape/abuse. */
+    tts: {
+      max: Number.isFinite(ttsMax) && ttsMax > 0 ? ttsMax : 40,
       timeWindow: 60_000,
     },
   };
@@ -129,6 +138,15 @@ export function legacyRoutesEnabled(): boolean {
 export function publicAiRoutesEnabled(): boolean {
   if (isVaultOnlySurface()) return false;
   return envFlag("JEXXXUS_ENABLE_PUBLIC_AI_ROUTES", true);
+}
+
+/**
+ * Public Edge TTS (Microsoft neural via edge-tts / msedge-tts).
+ * No API key / no HF bill — safe on vault surface for bible.jexxx.us.
+ * Default ON. Set JEXXXUS_ENABLE_PUBLIC_TTS_ROUTES=false to disable.
+ */
+export function publicTtsRoutesEnabled(): boolean {
+  return envFlag("JEXXXUS_ENABLE_PUBLIC_TTS_ROUTES", true);
 }
 
 export function observabilityRoutesEnabled(): boolean {

@@ -13,7 +13,7 @@ import { accountRoutes, getAccountSchemaPayload } from "./routes/v1/account.js";
 import { toolsRoutes, getToolsSchemaPayload } from "./routes/v1/tools.js";
 import { bibleRoutes } from "./routes/v1/bible.js";
 import { ttsRoutes } from "./routes/v1/tts.js";
-import { getApiSurface, getRateLimitConfig, getVaultConfigStatus, legacyRoutesEnabled, loadCorsOrigins, observabilityRoutesEnabled, publicAiRoutesEnabled, validateVaultStartup, } from "./lib/server-config.js";
+import { getApiSurface, getRateLimitConfig, getVaultConfigStatus, legacyRoutesEnabled, loadCorsOrigins, observabilityRoutesEnabled, publicAiRoutesEnabled, publicTtsRoutesEnabled, validateVaultStartup, } from "./lib/server-config.js";
 const loadServer = async () => {
     const createRequire = (await import("module")).createRequire;
     const req = createRequire(import.meta.url);
@@ -54,11 +54,22 @@ const loadServer = async () => {
     server.get("/api/v1/tools/schema", async () => getToolsSchemaPayload());
     // Public read-only Bible surface (no provider cost).
     server.register(bibleRoutes, { prefix: "/api/v1/bible" });
+    // Public Edge TTS (Hermes-parity neural voice) — free, no provider key.
+    // Mounted independently of chat/AI so vault surface still serves bible.jexxx.us.
+    if (publicTtsRoutesEnabled()) {
+        await server.register(async (ttsApp) => {
+            const ttsLimits = getRateLimitConfig().tts;
+            await ttsApp.register(fastifyRateLimit, {
+                max: ttsLimits.max,
+                timeWindow: ttsLimits.timeWindow,
+            });
+            await ttsApp.register(ttsRoutes, { prefix: "/api/v1/tts" });
+        });
+    }
     if (publicAiRoutesEnabled()) {
         server.register(chatRoutes, { prefix: "/api/v1/chat" });
         server.register(solomonRoutes, { prefix: "/api/v1/solomon" });
         server.register(modelsRoutes, { prefix: "/api/v1/models" });
-        server.register(ttsRoutes, { prefix: "/api/v1/tts" });
     }
     if (legacyRoutesEnabled()) {
         server.register(intakeRoutes, { prefix: "/api/intake" });

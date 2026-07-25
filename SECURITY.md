@@ -42,7 +42,7 @@ optional (super-admin elevation only).
 
 | `JEXXXUS_API_SURFACE` | Mounted routes |
 | --------------------- | -------------- |
-| `vault` (recommended for OSS) | `/health`, `/api/v1/account/*`, `/api/v1/tools/*`, `/api/v1/bible/*` |
+| `vault` (recommended for OSS) | `/health`, `/api/v1/account/*`, `/api/v1/tools/*`, `/api/v1/bible/*`, `/api/v1/tts/*` (Edge TTS; toggle `JEXXXUS_ENABLE_PUBLIC_TTS_ROUTES`) |
 | `full` (empire default) | Above + legacy chat/intake/users/AI routes |
 
 Self-hosters should use **`JEXXXUS_API_SURFACE=vault`** unless they explicitly need legacy routes.
@@ -68,7 +68,8 @@ Never hardcode Clerk IDs in source. Configure via environment only.
 - [ ] Copy `.env.example` → `.env`; never commit `.env`
 - [ ] Set `JEXXXUS_ACCOUNT_API=off`
 - [ ] Set `JEXXXUS_API_SURFACE=vault` unless legacy routes are required
-- [ ] Set `JEXXXUS_ENABLE_PUBLIC_AI_ROUTES=false` if not using chat/TTS (prevents provider cost abuse)
+- [ ] Set `JEXXXUS_ENABLE_PUBLIC_AI_ROUTES=false` if not using chat (prevents LLM provider cost abuse)
+- [ ] Edge TTS is separate (`JEXXXUS_ENABLE_PUBLIC_TTS_ROUTES`, default on) — free Microsoft neural, no API key; rate-limit via `JEXXXUS_TTS_RATE_LIMIT_MAX`
 - [ ] Set `JEXXXUS_ENABLE_OBSERVABILITY=false` (default) or restrict to super-admins
 - [ ] Configure `JEXXXUS_CORS_ORIGINS` to your frontends only
 - [ ] Optional: `CLERK_AUTHORIZED_PARTIES` to restrict JWT `azp`
