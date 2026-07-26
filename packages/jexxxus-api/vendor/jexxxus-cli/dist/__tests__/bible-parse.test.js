@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { findBook, findVerse, hasLocalBibleVault, looksLikeVerseReference, normalizeBookLookupKey, parseVerseReference, } from "../lib/bible.js";
 import { bibleTool } from "../lib/blxckchat/tools/bible-tools.js";
+import { fetchVerseFromWeb, loadLiveBibleCatalog } from "../lib/bible-web.js";
 test("parseVerseReference accepts numbered books", () => {
     assert.deepEqual(parseVerseReference("1 John 1:9"), {
         bookName: "1 John",
@@ -17,6 +18,23 @@ test("parseVerseReference accepts numbered books", () => {
         bookName: "Genesis",
         chapter: 1,
         verse: 1,
+    });
+});
+test("parseVerseReference accepts multi-word super-canon titles", () => {
+    assert.deepEqual(parseVerseReference("Gospel of Thomas 1:5"), {
+        bookName: "Gospel of Thomas",
+        chapter: 1,
+        verse: 5,
+    });
+    assert.deepEqual(parseVerseReference("1 Enoch 1:1"), {
+        bookName: "1 Enoch",
+        chapter: 1,
+        verse: 1,
+    });
+    assert.deepEqual(parseVerseReference("Song of Songs 1:2"), {
+        bookName: "Song of Songs",
+        chapter: 1,
+        verse: 2,
     });
 });
 test("normalizeBookLookupKey matches spaced and compact numbered books", () => {
@@ -60,5 +78,27 @@ test("bible_query returns formatted verse text for valid refs", async () => {
         return;
     assert.doesNotMatch(raw, /^\[/);
     assert.match(raw, /Genesis 1:1/);
+});
+test("live catalog exposes full super-canon", async () => {
+    const books = await loadLiveBibleCatalog();
+    assert.ok(books.length >= 120, `expected ~131 books, got ${books.length}`);
+    assert.ok(books.some((b) => /thomas/i.test(b.name)));
+    assert.ok(books.some((b) => /enoch/i.test(b.name)));
+});
+test("web corpus resolves Gospel of Thomas and 1 Enoch", async () => {
+    const thomas = await fetchVerseFromWeb("Gospel of Thomas", 1, 1);
+    assert.ok(thomas?.text, "Thomas 1:1");
+    assert.match(thomas.book, /Thomas/i);
+    const enoch = await fetchVerseFromWeb("1 Enoch", 1, 1);
+    assert.ok(enoch?.text, "1 Enoch 1:1");
+    assert.match(enoch.book, /Enoch/i);
+});
+test("bible_query catalog action returns live titles", async () => {
+    const raw = await bibleTool.execute({
+        action: "catalog",
+        canon: "Nag Hammadi",
+    });
+    assert.match(raw, /Gospel of Thomas/i);
+    assert.match(raw, /super-canon catalog/i);
 });
 //# sourceMappingURL=bible-parse.test.js.map

@@ -185,7 +185,7 @@ function findVerseFromLocalVault(query) {
         return null;
     }
 }
-/** Local obsidian vault first, then bible.jexxx.us web API when vault is absent. */
+/** Local vault first, then bible.jexxx.us static corpus → api.jexxx.us → bible-api.com. */
 export async function findVerseWithFallback(query) {
     const local = findVerseFromLocalVault(query);
     if (local)

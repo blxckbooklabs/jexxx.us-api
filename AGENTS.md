@@ -43,8 +43,28 @@ Owned by JEXXXUS, LLC platform / infrastructure.
 | Account | `packages/jexxxus-api/src/routes/v1/account.ts` |
 | Tools | `packages/jexxxus-api/src/routes/v1/tools.ts` |
 | Bible | `packages/jexxxus-api/src/routes/v1/bible.ts` |
+| Bible corpus client | `packages/jexxxus-api/src/lib/bible-corpus.ts` |
 | TTS (Edge) | `packages/jexxxus-api/src/routes/v1/tts.ts` |
 | Session | `packages/jexxxus-api/src/lib/account-session.ts` |
+
+### Bible super-canon (bible.jexxx.us)
+
+Live SoT is **`https://bible.jexxx.us/data/index.json`** + `/data/books/*.json` (~131 books), not the partial vendored `data/bible-obsidian` tree.
+
+| Route | Purpose |
+| ----- | ------- |
+| `GET /api/v1/bible/health` | Corpus reachability + book/canon counts |
+| `GET /api/v1/bible/books` | Full catalog (`?canon=` filter) |
+| `GET /api/v1/bible/canons` | Canon rollup |
+| `GET /api/v1/bible/catalog` | Stats + books |
+| `GET /api/v1/bible/resolve?ref=` | `Book Chapter:Verse` → text |
+| `GET /api/v1/bible/search?q=` | Ref resolve or catalog filter |
+| `GET /api/v1/bible/:book/:chapter[/:verse]` | Chapter/verse (vault → corpus → bible-api.com) |
+| `GET /api/v1/bible/aeo` | llms.txt / feed / sitemap discovery + previews |
+| `GET /api/v1/bible/manna` | Daily Manna from `feed.xml` |
+| `GET /api/v1/bible/feed` | RSS passthrough |
+
+Env: `BIBLE_JEXXXUS_ORIGIN` (default `https://bible.jexxx.us`), optional `BIBLE_VAULT_PATH`.
 
 ### Public Edge TTS (bible.jexxx.us)
 
