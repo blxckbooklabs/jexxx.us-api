@@ -40,6 +40,6 @@ export declare function parseVerseReference(query: string): {
     verse: number;
 } | null;
 export declare function findVerse(query: string): BibleVerse | null;
-/** Local vault first, then bible.jexxx.us static corpus → api.jexxx.us → bible-api.com. */
+/** Live super-canon first (bible.jexxx.us), then local vault, then API/bible-api.com. */
 export declare function findVerseWithFallback(query: string): Promise<BibleVerse | null>;
 //# sourceMappingURL=bible.d.ts.map

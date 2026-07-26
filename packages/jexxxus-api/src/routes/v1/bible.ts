@@ -2,8 +2,8 @@
  * JEXXXUS | API Bible routes — super-canon (131 books) via bible.jexxx.us static corpus.
  *
  * Priority for chapter/verse:
- *   1. Local sovereign vault (optional, BIBLE_VAULT_PATH)
- *   2. bible.jexxx.us /data/index.json + /data/books/*.json  (SoT for full canon)
+ *   1. bible.jexxx.us /data/index.json + /data/books/*.json  (SoT for full canon)
+ *   2. Local sovereign vault (optional, BIBLE_VAULT_PATH) — partial overlay only
  *   3. bible-api.com (Protestant PD translations only)
  *
  * AEO/RSS discovery always curls bible.jexxx.us (llms.txt, feed.xml, sitemap).
@@ -463,13 +463,7 @@ export const bibleRoutes = async (server: FastifyInstance) => {
       });
     }
 
-    // 1) Local vault
-    const vault = await chapterFromVault(book, chapterNum);
-    if (vault) {
-      return { success: true, data: vault };
-    }
-
-    // 2) Super-canon static corpus
+    // 1) Super-canon static corpus (live SoT — full 131 books)
     try {
       const corpus = await getChapterFromCorpus(book, chapterNum);
       if (corpus) {
@@ -490,6 +484,12 @@ export const bibleRoutes = async (server: FastifyInstance) => {
       }
     } catch {
       /* fall through */
+    }
+
+    // 2) Local vault overlay (partial / legacy)
+    const vault = await chapterFromVault(book, chapterNum);
+    if (vault) {
+      return { success: true, data: vault };
     }
 
     // 3) Public PD API (Protestant)
@@ -534,7 +534,31 @@ export const bibleRoutes = async (server: FastifyInstance) => {
         });
       }
 
-      // Vault
+      // Super-canon first
+      try {
+        const hit = await getVerseFromCorpus(book, chapterNum, verseNum);
+        if (hit) {
+          return {
+            success: true,
+            data: {
+              reference: hit.reference,
+              translation: "JEXXXUS | BIBLE",
+              book: hit.meta.name,
+              chapter: chapterNum,
+              verse: verseNum,
+              text: hit.text,
+              heading: hit.heading,
+              canon: hit.canon,
+              source: hit.source,
+              url: `${publicChapterUrl(hit.meta.name, chapterNum)}#v${verseNum}`,
+            },
+          };
+        }
+      } catch {
+        /* fall through */
+      }
+
+      // Vault overlay
       const sovereignFiles = findSovereignFiles(book, chapterNum);
       if (sovereignFiles) {
         const targetFile = sovereignFiles.find((f) =>
@@ -557,30 +581,6 @@ export const bibleRoutes = async (server: FastifyInstance) => {
             };
           }
         }
-      }
-
-      // Super-canon
-      try {
-        const hit = await getVerseFromCorpus(book, chapterNum, verseNum);
-        if (hit) {
-          return {
-            success: true,
-            data: {
-              reference: hit.reference,
-              translation: "JEXXXUS | BIBLE",
-              book: hit.meta.name,
-              chapter: chapterNum,
-              verse: verseNum,
-              text: hit.text,
-              heading: hit.heading,
-              canon: hit.canon,
-              source: hit.source,
-              url: `${publicChapterUrl(hit.meta.name, chapterNum)}#v${verseNum}`,
-            },
-          };
-        }
-      } catch {
-        /* fall through */
       }
 
       // bible-api.com

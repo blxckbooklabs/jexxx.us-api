@@ -2,8 +2,8 @@
  * JEXXXUS | API Bible routes — super-canon (131 books) via bible.jexxx.us static corpus.
  *
  * Priority for chapter/verse:
- *   1. Local sovereign vault (optional, BIBLE_VAULT_PATH)
- *   2. bible.jexxx.us /data/index.json + /data/books/*.json  (SoT for full canon)
+ *   1. bible.jexxx.us /data/index.json + /data/books/*.json  (SoT for full canon)
+ *   2. Local sovereign vault (optional, BIBLE_VAULT_PATH) — partial overlay only
  *   3. bible-api.com (Protestant PD translations only)
  *
  * AEO/RSS discovery always curls bible.jexxx.us (llms.txt, feed.xml, sitemap).
@@ -403,12 +403,7 @@ export const bibleRoutes = async (server) => {
                 error: "Invalid book or chapter",
             });
         }
-        // 1) Local vault
-        const vault = await chapterFromVault(book, chapterNum);
-        if (vault) {
-            return { success: true, data: vault };
-        }
-        // 2) Super-canon static corpus
+        // 1) Super-canon static corpus (live SoT — full 131 books)
         try {
             const corpus = await getChapterFromCorpus(book, chapterNum);
             if (corpus) {
@@ -430,6 +425,11 @@ export const bibleRoutes = async (server) => {
         }
         catch {
             /* fall through */
+        }
+        // 2) Local vault overlay (partial / legacy)
+        const vault = await chapterFromVault(book, chapterNum);
+        if (vault) {
+            return { success: true, data: vault };
         }
         // 3) Public PD API (Protestant)
         try {
@@ -467,29 +467,7 @@ export const bibleRoutes = async (server) => {
                 error: "Invalid book, chapter, or verse",
             });
         }
-        // Vault
-        const sovereignFiles = findSovereignFiles(book, chapterNum);
-        if (sovereignFiles) {
-            const targetFile = sovereignFiles.find((f) => f.includes(`-${verseNum}.md`));
-            if (targetFile) {
-                const parsed = parseVerseFromMarkdown(targetFile);
-                if (parsed) {
-                    return {
-                        success: true,
-                        data: {
-                            reference: `${book} ${chapterNum}:${verseNum}`,
-                            translation: "Sovereign Vault",
-                            book,
-                            chapter: chapterNum,
-                            verse: verseNum,
-                            text: parsed.text,
-                            source: "local-vault",
-                        },
-                    };
-                }
-            }
-        }
-        // Super-canon
+        // Super-canon first
         try {
             const hit = await getVerseFromCorpus(book, chapterNum, verseNum);
             if (hit) {
@@ -512,6 +490,28 @@ export const bibleRoutes = async (server) => {
         }
         catch {
             /* fall through */
+        }
+        // Vault overlay
+        const sovereignFiles = findSovereignFiles(book, chapterNum);
+        if (sovereignFiles) {
+            const targetFile = sovereignFiles.find((f) => f.includes(`-${verseNum}.md`));
+            if (targetFile) {
+                const parsed = parseVerseFromMarkdown(targetFile);
+                if (parsed) {
+                    return {
+                        success: true,
+                        data: {
+                            reference: `${book} ${chapterNum}:${verseNum}`,
+                            translation: "Sovereign Vault",
+                            book,
+                            chapter: chapterNum,
+                            verse: verseNum,
+                            text: parsed.text,
+                            source: "local-vault",
+                        },
+                    };
+                }
+            }
         }
         // bible-api.com
         try {

@@ -185,14 +185,14 @@ function findVerseFromLocalVault(query) {
         return null;
     }
 }
-/** Local vault first, then bible.jexxx.us static corpus → api.jexxx.us → bible-api.com. */
+/** Live super-canon first (bible.jexxx.us), then local vault, then API/bible-api.com. */
 export async function findVerseWithFallback(query) {
-    const local = findVerseFromLocalVault(query);
-    if (local)
-        return local;
     const parsed = parseVerseReference(query);
     if (!parsed)
         return null;
-    return fetchVerseFromWeb(parsed.bookName, parsed.chapter, parsed.verse);
+    const remote = await fetchVerseFromWeb(parsed.bookName, parsed.chapter, parsed.verse);
+    if (remote)
+        return remote;
+    return findVerseFromLocalVault(query);
 }
 //# sourceMappingURL=bible.js.map
