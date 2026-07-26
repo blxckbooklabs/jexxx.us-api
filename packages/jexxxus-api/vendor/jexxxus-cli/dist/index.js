@@ -10,7 +10,9 @@ import { runDoctorFromEnv } from "./lib/doctor.js";
 import { loadOperatorEnv } from "./lib/env.js";
 import { getImportOwnerError } from "./lib/guards.js";
 import { createNotificationsClient, sendSystemNotification, } from "./lib/notifications.js";
-import { getBibleSections, getBibleBooks, getBibleChapters, getBibleVerses, getVerse, getChapter, findBook, findVerseWithFallback, } from "./lib/bible.js";
+import { getBibleSections, getBibleBooks, findVerseWithFallback, } from "./lib/bible.js";
+import { aeoDiscoveryUrls, fetchBibleAeoBundle, fetchChapterFromWeb, fetchDailyMannaText, listLiveCanons, listLiveChapters, loadLiveBibleCatalog, resolveLiveBook, } from "./lib/bible-web.js";
+import { formatBibleVerseForChat } from "./lib/blxckchat/bible-format.js";
 import { createOperatorClient } from "./lib/supabase.js";
 import { listProvidersRedacted, resolveStartupProvider, runConfigureFlow, } from "./lib/blxckchat/config.js";
 import { resolveProvider } from "./lib/blxckchat/providers/registry.js";
@@ -313,18 +315,17 @@ program
 });
 const bibleCmd = program
     .command("bible")
-    .description("Query the Obsidian Bible vault (verses, chapters, books, sections)");
+    .description("Query the JEXXXUS super-canon Bible (live bible.jexxx.us — 131 books)");
 bibleCmd
-    .command("section")
-    .description("List all major sections (Torah, Historical, Poetic, etc.)")
-    .action(() => {
+    .command("canons")
+    .description("List live canons and book counts")
+    .action(async () => {
     try {
-        const sections = getBibleSections();
-        console.log(chalk.green("[Bible Sections]"));
-        sections.forEach((section) => {
-            const cleanName = section.replace(/^\d{2}-/, "");
-            console.log(`  • ${cleanName} (${section})`);
-        });
+        const canons = await listLiveCanons();
+        console.log(chalk.green(`[Canons — ${canons.reduce((n, c) => n + c.bookCount, 0)} books]`));
+        for (const c of canons) {
+            console.log(`  • ${c.canon}: ${c.bookCount} books · ${c.chapterCount} ch`);
+        }
         process.exit(0);
     }
     catch (err) {
@@ -333,13 +334,78 @@ bibleCmd
     }
 });
 bibleCmd
-    .command("book <section>")
-    .description("List all books in a section")
-    .action((section) => {
+    .command("catalog")
+    .alias("books")
+    .description("List live super-canon books (optional --canon filter)")
+    .option("-c, --canon <name>", "Filter by canon (e.g. Nag Hammadi)")
+    .option("-q, --query <text>", "Filter by book name")
+    .action(async (options) => {
     try {
-        const books = getBibleBooks(section);
-        console.log(chalk.green(`[Books in ${section}]`));
-        books.forEach((book) => {
+        let books = await loadLiveBibleCatalog();
+        if (options.canon) {
+            const n = options.canon.toLowerCase();
+            books = books.filter((b) => b.canon.toLowerCase().includes(n));
+        }
+        if (options.query) {
+            const n = options.query.toLowerCase();
+            books = books.filter((b) => b.name.toLowerCase().includes(n));
+        }
+        console.log(chalk.green(`[Catalog — ${books.length} books]`));
+        for (const b of books) {
+            console.log(`  • ${b.name} (${b.chapterCount} ch) · ${b.canon}`);
+        }
+        process.exit(0);
+    }
+    catch (err) {
+        console.error(chalk.red(`[ERROR] ${err instanceof Error ? err.message : "Unknown error"}`));
+        process.exit(1);
+    }
+});
+bibleCmd
+    .command("section")
+    .description("List canons (live) or local vault sections if mounted")
+    .action(async () => {
+    try {
+        const canons = await listLiveCanons();
+        console.log(chalk.green("[Live canons]"));
+        canons.forEach((c) => {
+            console.log(`  • ${c.canon} (${c.bookCount} books)`);
+        });
+        const sections = getBibleSections();
+        if (sections.length) {
+            console.log(chalk.green("\n[Local vault sections]"));
+            sections.forEach((section) => {
+                const cleanName = section.replace(/^\d{2}-/, "");
+                console.log(`  • ${cleanName} (${section})`);
+            });
+        }
+        process.exit(0);
+    }
+    catch (err) {
+        console.error(chalk.red(`[ERROR] ${err instanceof Error ? err.message : "Unknown error"}`));
+        process.exit(1);
+    }
+});
+bibleCmd
+    .command("book <sectionOrCanon>")
+    .description("List books in a live canon (e.g. \"Nag Hammadi\") or local vault section")
+    .action(async (sectionOrCanon) => {
+    try {
+        // Prefer live canon filter
+        const books = await loadLiveBibleCatalog();
+        const needle = sectionOrCanon.toLowerCase();
+        const live = books.filter((b) => b.canon.toLowerCase().includes(needle) ||
+            b.canon.toLowerCase() === needle);
+        if (live.length) {
+            console.log(chalk.green(`[Books — ${sectionOrCanon}]`));
+            live.forEach((b) => {
+                console.log(`  • ${b.name} (${b.chapterCount} ch)`);
+            });
+            process.exit(0);
+        }
+        const vaultBooks = getBibleBooks(sectionOrCanon);
+        console.log(chalk.green(`[Books in vault ${sectionOrCanon}]`));
+        vaultBooks.forEach((book) => {
             const cleanName = book.replace(/^\d{2}-/, "");
             console.log(`  • ${cleanName}`);
         });
@@ -351,16 +417,45 @@ bibleCmd
     }
 });
 bibleCmd
-    .command("chapter <section> <book>")
-    .description("List all chapters in a book")
-    .action((section, book) => {
+    .command("chapters <book>")
+    .description("List chapter numbers for a live book (e.g. \"1 Enoch\")")
+    .action(async (book) => {
     try {
-        const chapters = getBibleChapters(section, book);
-        console.log(chalk.green(`[Chapters in ${book}]`));
-        chapters.forEach((ch) => {
-            const chNum = ch.replace("Chapter ", "");
-            console.log(`  • Chapter ${chNum}`);
-        });
+        const meta = await resolveLiveBook(book);
+        const chapters = await listLiveChapters(book);
+        if (!meta || !chapters.length) {
+            console.error(chalk.red(`[ERROR] Book not found: ${book}`));
+            process.exit(1);
+        }
+        console.log(chalk.green(`[${meta.name} — ${chapters.length} chapters · ${meta.canon}]`));
+        console.log(`  ${chapters.join(", ")}`);
+        process.exit(0);
+    }
+    catch (err) {
+        console.error(chalk.red(`[ERROR] ${err instanceof Error ? err.message : "Unknown error"}`));
+        process.exit(1);
+    }
+});
+bibleCmd
+    .command("chapter <book> <chapter>")
+    .description("Print a full chapter from the live corpus (e.g. Genesis 1)")
+    .action(async (book, chapter) => {
+    try {
+        const n = parseInt(chapter, 10);
+        const payload = await fetchChapterFromWeb(book, n);
+        if (!payload) {
+            console.error(chalk.red(`[ERROR] Chapter not found: ${book} ${chapter}`));
+            process.exit(1);
+        }
+        console.log(chalk.blue(`${payload.book} ${payload.chapter}` +
+            (payload.canon ? ` · ${payload.canon}` : "")));
+        console.log(chalk.dim(payload.url));
+        console.log(chalk.dim("─".repeat(60)));
+        for (const v of payload.verses) {
+            console.log(`${chalk.cyan(String(v.verse).padStart(3))}  ${v.text}`);
+        }
+        console.log(chalk.dim("─".repeat(60)));
+        console.log(chalk.gray(`via ${payload.sourceType}`));
         process.exit(0);
     }
     catch (err) {
@@ -370,22 +465,15 @@ bibleCmd
 });
 bibleCmd
     .command("verse <book> <chapter> <verse>")
-    .description("Get a specific verse (e.g., Genesis 1 1)")
-    .action((book, chapter, verse) => {
+    .description("Get a specific verse (e.g., Genesis 1 1) via live corpus")
+    .action(async (book, chapter, verse) => {
     try {
-        const bookInfo = findBook(book);
-        if (!bookInfo) {
-            console.error(chalk.red(`[ERROR] Book not found: ${book}`));
+        const verseData = await findVerseWithFallback(`${book} ${chapter}:${verse}`);
+        if (!verseData) {
+            console.error(chalk.red(`[ERROR] Verse not found: ${book} ${chapter}:${verse}`));
             process.exit(1);
         }
-        const verseData = getVerse(bookInfo.section, bookInfo.book, `Chapter ${chapter}`, `${chapter}-${verse}.md`);
-        console.log(chalk.blue(`${book} ${chapter}:${verse}`));
-        console.log(chalk.dim("─".repeat(60)));
-        console.log(verseData.text);
-        console.log(chalk.dim("─".repeat(60)));
-        if (verseData.canon) {
-            console.log(chalk.gray(`Canon: ${verseData.canon}`));
-        }
+        console.log(formatBibleVerseForChat(verseData));
         process.exit(0);
     }
     catch (err) {
@@ -395,7 +483,7 @@ bibleCmd
 });
 bibleCmd
     .command("query <query>")
-    .description("Query a verse (e.g., \"Genesis 1:1\" or \"John 3 16\")")
+    .description('Query a verse (e.g. "Genesis 1:1", "Jn 3:16", "1 Enoch 1:1")')
     .action(async (query) => {
     try {
         const verseData = await findVerseWithFallback(query);
@@ -403,13 +491,34 @@ bibleCmd
             console.error(chalk.red(`[ERROR] Verse not found: ${query}`));
             process.exit(1);
         }
-        console.log(chalk.blue(`${verseData.book} ${verseData.chapter}:${verseData.verse}`));
-        console.log(chalk.dim("─".repeat(60)));
-        console.log(verseData.text);
-        console.log(chalk.dim("─".repeat(60)));
-        if (verseData.canon) {
-            console.log(chalk.gray(`Canon: ${verseData.canon}`));
-        }
+        console.log(formatBibleVerseForChat(verseData));
+        process.exit(0);
+    }
+    catch (err) {
+        console.error(chalk.red(`[ERROR] ${err instanceof Error ? err.message : "Unknown error"}`));
+        process.exit(1);
+    }
+});
+bibleCmd
+    .command("manna")
+    .description("Daily Manna from bible.jexxx.us feed.xml")
+    .action(async () => {
+    try {
+        console.log(await fetchDailyMannaText());
+        process.exit(0);
+    }
+    catch (err) {
+        console.error(chalk.red(`[ERROR] ${err instanceof Error ? err.message : "Unknown error"}`));
+        process.exit(1);
+    }
+});
+bibleCmd
+    .command("aeo")
+    .description("AEO/SEO discovery (llms.txt, feed, sitemap)")
+    .action(async () => {
+    try {
+        console.log(await fetchBibleAeoBundle());
+        console.log(chalk.dim(JSON.stringify(aeoDiscoveryUrls(), null, 2)));
         process.exit(0);
     }
     catch (err) {

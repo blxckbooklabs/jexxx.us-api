@@ -11,19 +11,105 @@ const BOOK_ALIASES = {
     "iii enoch": "3 Enoch",
     psalm: "Psalms",
     ps: "Psalms",
+    pss: "Psalms",
     qoh: "Ecclesiastes",
     qoheleth: "Ecclesiastes",
     ecclesiasticus: "Sirach",
+    sir: "Sirach",
     wisdom: "Wisdom of Solomon",
+    wis: "Wisdom of Solomon",
     "prayer of manasseh": "Prayer of Manasses",
     manasseh: "Prayer of Manasses",
     manasses: "Prayer of Manasses",
     didascalica: "Didascalia",
     "gospel thomas": "Gospel of Thomas",
+    "gos thomas": "Gospel of Thomas",
+    thomas: "Gospel of Thomas",
     "thomas the contender": "Book of Thomas the Contender",
     hermetica: "Corpus Hermeticum",
     "corpus hermeticum": "Corpus Hermeticum",
     pistis: "Pistis Sophia",
+    // common Protestant abbreviations → super-canon titles
+    gen: "Genesis",
+    ex: "Exodus",
+    exo: "Exodus",
+    lev: "Leviticus",
+    num: "Numbers",
+    deut: "Deuteronomy",
+    dt: "Deuteronomy",
+    josh: "Joshua",
+    judg: "Judges",
+    jdg: "Judges",
+    "1sam": "1 Samuel",
+    "2sam": "2 Samuel",
+    "1kgs": "1 Kings",
+    "2kgs": "2 Kings",
+    "1chr": "1 Chronicles",
+    "2chr": "2 Chronicles",
+    ezr: "Ezra",
+    neh: "Nehemiah",
+    est: "Esther",
+    job: "Job",
+    prov: "Proverbs",
+    pr: "Proverbs",
+    eccl: "Ecclesiastes",
+    ecc: "Ecclesiastes",
+    isa: "Isaiah",
+    jer: "Jeremiah",
+    lam: "Lamentations",
+    ezek: "Ezekiel",
+    eze: "Ezekiel",
+    dan: "Daniel",
+    hos: "Hosea",
+    joel: "Joel",
+    amos: "Amos",
+    obad: "Obadiah",
+    jona: "Jonah",
+    jon: "Jonah",
+    mic: "Micah",
+    nah: "Nahum",
+    hab: "Habakkuk",
+    zeph: "Zephaniah",
+    hag: "Haggai",
+    zech: "Zechariah",
+    mal: "Malachi",
+    mt: "Matthew",
+    matt: "Matthew",
+    mk: "Mark",
+    mrk: "Mark",
+    lk: "Luke",
+    luk: "Luke",
+    jn: "John",
+    joh: "John",
+    acts: "Acts",
+    rom: "Romans",
+    "1cor": "1 Corinthians",
+    "2cor": "2 Corinthians",
+    gal: "Galatians",
+    eph: "Ephesians",
+    phil: "Philippians",
+    php: "Philippians",
+    col: "Colossians",
+    "1thess": "1 Thessalonians",
+    "2thess": "2 Thessalonians",
+    "1tim": "1 Timothy",
+    "2tim": "2 Timothy",
+    tit: "Titus",
+    phlm: "Philemon",
+    heb: "Hebrews",
+    jas: "James",
+    "1pet": "1 Peter",
+    "2pet": "2 Peter",
+    "1jn": "1 John",
+    "2jn": "2 John",
+    "3jn": "3 John",
+    jude: "Jude",
+    rev: "Revelation",
+    tob: "Tobit",
+    jdt: "Judith",
+    "1macc": "1 Maccabees",
+    "2macc": "2 Maccabees",
+    bar: "Baruch",
 };
 let indexCache = null;
 const bookCache = new Map();
@@ -87,7 +173,14 @@ export async function loadLiveBibleCatalog(force = false) {
         return indexCache.books;
     }
     const origin = bibleSiteOrigin();
-    let raw = (await fetchJson(`${origin}/data/index.json`)) || null;
+    const parsed = await fetchJson(`${origin}/data/index.json`);
+    let raw = null;
+    if (Array.isArray(parsed)) {
+        raw = parsed;
+    }
+    else if (parsed && typeof parsed === "object" && Array.isArray(parsed.books)) {
+        raw = parsed.books;
+    }
     // API catalog fallback if site index fails
     if (!raw?.length) {
         const api = await fetchJson(`${jexxxusApiBibleBase()}/books`);
@@ -105,12 +198,15 @@ export async function loadLiveBibleCatalog(force = false) {
             return indexCache.books;
         throw new Error("Unable to load Bible catalog from bible.jexxx.us or API");
     }
-    const books = raw.map((b) => ({
+    const books = raw
+        .filter((b) => b && b.name && b.file)
+        .map((b) => ({
         name: String(b.name),
         canon: String(b.canon ?? "Unknown"),
         file: String(b.file),
-        chapterCount: Number(b.chapterCount) || 0,
-    }));
+        chapterCount: Number(b.chapterCount ?? b.chapters) || 0,
+    }))
+        .sort((a, b) => a.name.localeCompare(b.name));
     indexCache = { at: now, books };
     return books;
 }
@@ -157,6 +253,57 @@ async function loadLiveBookJson(meta) {
 }
 function verseFromRows(rows, verse) {
     return rows.find((row) => row.verse === verse) ?? rows[verse - 1];
+}
+/** Full chapter via live super-canon (+ API fallback). */
+export async function fetchChapterFromWeb(bookName, chapter) {
+    try {
+        const meta = await resolveLiveBook(bookName);
+        if (meta) {
+            const book = await loadLiveBookJson(meta);
+            const ch = book?.chapters?.find((c) => Number(c.chapter) === chapter) ||
+                book?.chapters?.[chapter - 1];
+            const rows = ch?.verses || [];
+            if (rows.length) {
+                return {
+                    book: meta.name,
+                    canon: meta.canon,
+                    chapter,
+                    chapters: meta.chapterCount,
+                    verses: rows.map((v) => ({
+                        verse: Number(v.verse) || 0,
+                        text: String(v.text || "")
+                            .replace(/\s+/g, " ")
+                            .trim(),
+                        ...(v.heading ? { heading: String(v.heading) } : {}),
+                    })),
+                    sourceType: "bible.jexxx.us",
+                    url: `${bibleSiteOrigin()}/${meta.name.replace(/\s+/g, "-")}/${chapter}`,
+                };
+            }
+        }
+    }
+    catch {
+        /* continue */
+    }
+    try {
+        const data = await fetchJson(`${jexxxusApiBibleBase()}/${encodeURIComponent(bookName)}/${chapter}`);
+        if (data?.success && data.data?.verses?.length) {
+            return {
+                book: data.data.book || bookName,
+                canon: data.data.canon,
+                chapter: data.data.chapter || chapter,
+                chapters: data.data.chapters || data.data.verses.length,
+                verses: data.data.verses,
+                sourceType: "api.jexxx.us",
+                url: data.data.url ||
+                    `${bibleSiteOrigin()}/${(data.data.book || bookName).replace(/\s+/g, "-")}/${chapter}`,
+            };
+        }
+    }
+    catch {
+        /* continue */
+    }
+    return null;
 }
 /** Fetch a single verse via live super-canon (preferred) + fallbacks. */
 export async function fetchVerseFromWeb(bookName, chapter, verse, translation = "KJV") {

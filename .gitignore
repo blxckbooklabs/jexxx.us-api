@@ -29,3 +29,6 @@ coverage/
 credentials.json
 *.pem
 *.key
+
+# Local media binaries (not part of the API package)
+bin/

@@ -14,6 +14,21 @@ export declare function bibleSiteOrigin(): string;
 export declare function jexxxusApiBibleBase(): string;
 export declare function loadLiveBibleCatalog(force?: boolean): Promise<CorpusBookMeta[]>;
 export declare function resolveLiveBook(bookQuery: string): Promise<CorpusBookMeta | null>;
+export type LiveChapterPayload = {
+    book: string;
+    canon?: string | undefined;
+    chapter: number;
+    chapters: number;
+    verses: Array<{
+        verse: number;
+        text: string;
+        heading?: string;
+    }>;
+    sourceType: string;
+    url: string;
+};
+/** Full chapter via live super-canon (+ API fallback). */
+export declare function fetchChapterFromWeb(bookName: string, chapter: number): Promise<LiveChapterPayload | null>;
 /** Fetch a single verse via live super-canon (preferred) + fallbacks. */
 export declare function fetchVerseFromWeb(bookName: string, chapter: number, verse: number, translation?: string): Promise<BibleVerse | null>;
 export declare function listLiveCanons(): Promise<Array<{

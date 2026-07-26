@@ -93,6 +93,23 @@ test("web corpus resolves Gospel of Thomas and 1 Enoch", async () => {
     assert.ok(enoch?.text, "1 Enoch 1:1");
     assert.match(enoch.book, /Enoch/i);
 });
+test("web corpus resolves abbreviations and chapter fetch", async () => {
+    const jn = await fetchVerseFromWeb("Jn", 3, 16);
+    assert.ok(jn?.text, "Jn 3:16");
+    assert.match(jn.book, /John/i);
+    const { fetchChapterFromWeb } = await import("../lib/bible-web.js");
+    const ch = await fetchChapterFromWeb("Genesis", 1);
+    assert.ok(ch && ch.verses.length >= 20, `Genesis 1 verses: ${ch?.verses.length}`);
+    assert.match(ch.verses[0].text, /beginning/i);
+});
+test("bible_query chapter action returns full chapter text", async () => {
+    const raw = await bibleTool.execute({
+        action: "chapter",
+        query: "Genesis 1",
+    });
+    assert.match(raw, /Genesis 1/i);
+    assert.match(raw, /In the beginning/i);
+});
 test("bible_query catalog action returns live titles", async () => {
     const raw = await bibleTool.execute({
         action: "catalog",
