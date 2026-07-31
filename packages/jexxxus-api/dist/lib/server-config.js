@@ -27,31 +27,44 @@ export function getApiSurface() {
 export function isVaultOnlySurface() {
     return getApiSurface() === "vault";
 }
+/** Kingdom frontends that always need browser CORS (TTS, vault widgets, etc.). */
+const REQUIRED_CORS_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:5173",
+    "https://jexxx.us",
+    "https://www.jexxx.us",
+    "https://bible.jexxx.us",
+    "https://veil.jexxx.us",
+    "https://api.jexxx.us",
+    "https://api-vm.jexxx.us",
+];
+const DEFAULT_CORS_ORIGINS = [
+    ...REQUIRED_CORS_ORIGINS,
+    "https://blxckchat.jexxx.us",
+    "https://blxckbook.jexxx.us",
+    "https://dxsh.blxckbook.jexxx.us",
+    "https://nxt.jexxx.us",
+    "https://mini.blxckchat.jexxx.us",
+    "https://blackbook.love",
+    "https://admin.blackbook.love",
+    "https://jexxxus.com",
+    "https://www.jexxxus.com",
+];
+/**
+ * CORS allowlist. `JEXXXUS_CORS_ORIGINS` (comma-separated) is merged with
+ * REQUIRED_CORS_ORIGINS so env tightening cannot drop bible/veil TTS hosts.
+ */
 export function loadCorsOrigins() {
     const raw = process.env.JEXXXUS_CORS_ORIGINS?.trim();
-    if (raw) {
-        return raw
+    const fromEnv = raw
+        ? raw
             .split(",")
             .map((o) => o.trim())
-            .filter(Boolean);
-    }
-    return [
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://localhost:5173",
-        "https://jexxx.us",
-        "https://bible.jexxx.us",
-        "https://api.jexxx.us",
-        "https://api-vm.jexxx.us",
-        "https://blxckchat.jexxx.us",
-        "https://blxckbook.jexxx.us",
-        "https://dxsh.blxckbook.jexxx.us",
-        "https://nxt.jexxx.us",
-        "https://blackbook.love",
-        "https://admin.blackbook.love",
-        "https://jexxxus.com",
-        "https://www.jexxxus.com",
-    ];
+            .filter(Boolean)
+        : [];
+    const base = fromEnv.length > 0 ? fromEnv : [...DEFAULT_CORS_ORIGINS];
+    return [...new Set([...REQUIRED_CORS_ORIGINS, ...base])];
 }
 export function parseAuthorizedParties() {
     const raw = process.env.CLERK_AUTHORIZED_PARTIES?.trim();
